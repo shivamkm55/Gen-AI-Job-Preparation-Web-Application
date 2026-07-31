@@ -8,7 +8,7 @@ import Register from "./features/auth/pages/register";
 export const router = createBrowserRouter([
     {
         path: "/login",
-        element: <Login />
+        element: <Login /> //app.routes.jsx matches the URL /login → renders <Login />
     },
     {   
         path: "/register",
