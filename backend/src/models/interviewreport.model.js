@@ -30,8 +30,8 @@ const mongoose = require("mongoose");
  *   }]
  * preparation plan [{
  *       day: number,
- *       task: [string],
  *       focus: string,
+ *       task: [string], 
  * }]
  */
 const behavioralQuestionSchema = new mongoose.Schema({
@@ -78,17 +78,17 @@ const skillGapSchema = new mongoose.Schema({
 
 const preparationPlanSchema = new mongoose.Schema({
     day: {
-        type: String,
+        type: Number,
         required: [true, "Day is required"]
     },
-    task: [{
-        type: String,
-        required: [true, "Task is required"]
-    }],
     focus: {
         type: String,
         required: [true, "Focus is required"]
-    }
+    },
+    tasks: [{
+        type: String,
+        required: [true, "Task is required"]
+    }]
 }, { _id: false });
 
 const interviewReportSchema = new mongoose.Schema({
@@ -96,7 +96,7 @@ const interviewReportSchema = new mongoose.Schema({
     type: String,
     required: [ true, "Job description is required"]
   },
-  resumeText: {
+  resume: {
     type: String,
     required: [ true, "Resume text is required"]
   },
@@ -112,9 +112,13 @@ const interviewReportSchema = new mongoose.Schema({
   technicalQuestions: [technicalQuestionSchema],
   behavioralQuestions: [behavioralQuestionSchema],
   skillGaps: [skillGapSchema],
-  preparationPlan: [preparationPlanSchema]
+  preparationPlan: [preparationPlanSchema],
+  user:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users"
+  }
 }, { timestamps: true });
 
-const InterviewReport = mongoose.model("InterviewReport", interviewReportSchema);
+const InterviewReportModel = mongoose.model("InterviewReport", interviewReportSchema);
 
-module.exports = InterviewReport;
+module.exports = InterviewReportModel;
