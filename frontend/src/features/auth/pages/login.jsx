@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import '../auth.form.scss'
 
@@ -15,24 +15,41 @@ const Login = () => {
     setError('')
     try {
       await handleLogin(email, password)
-      navigate('/dashboard')
+      navigate('/home')
     } catch (err) {
-      setError('Invalid email or password')
+      setError(err?.response?.data?.message || 'Invalid email or password')
     }
   }
 
   return (
     <main>
-      <div className='form-container'>
+      <div className={`form-container ${loading ? 'is-loading' : ''}`} aria-busy={loading}>
+        <div className={`loading-overlay ${loading ? 'show' : ''}`} aria-live="polite">
+          <div className="spinner" />
+          <p className="loading-text">Connecting you in...</p>
+        </div>
+
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <label htmlFor="email">Email</label>
-            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
           </div>
           <div className="input-group">
             <label htmlFor="password">Password</label>
-            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+            />
           </div>
           {error && <p className="error">{error}</p>}
           <button type="submit" className="button primary" disabled={loading}>
