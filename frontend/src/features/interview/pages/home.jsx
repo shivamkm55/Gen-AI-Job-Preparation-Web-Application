@@ -1,6 +1,28 @@
 import '../Style/home.scss'
-
+import {useInterview} from '../hooks/useinterview.js'
+import React, { useState, useRef } from 'react';
+import {useNavigate} from 'react-router'
 const Home = () => {
+
+    const {loading, generateReport} = useInterview();
+    const [jobDescription, setJobDescription] = useState('');
+    const [selfDescription, setSelfDescription] = useState('');
+    const resumeInputRef = useRef(null);
+
+    const handleGenerateReport = async () => {
+        const resumeFile = resumeInputRef.current.files[0];
+       const data= await generateReport({ jobDescription, selfDescription, resumeFile });
+       navigate(`/interview/${data._id}`);
+    };
+
+    if (loading) {
+        return (
+            <main className="loading-screen">
+                <h1>Generating Interview Report...</h1>
+            </main>
+        );
+    }
+
     return (
         <div className="home-page">
             <header className="topbar">
@@ -43,7 +65,14 @@ const Home = () => {
                             </div>
                             <span className="character-count">0 / 5000 characters</span>
                         </div>
-                        <textarea name="jobDescription" id="jobDescription" maxLength="5000" placeholder="e.g. Senior Frontend Engineer at Google requires proficiency in React, TypeScript, and large-scale system design..."></textarea>
+                        <textarea 
+                            name="jobDescription" 
+                            id="jobDescription" 
+                            maxLength="5000" 
+                            placeholder="e.g. Senior Frontend Engineer at Google requires proficiency in React, TypeScript, and large-scale system design..."
+                            value={jobDescription}
+                            onChange={(e) => setJobDescription(e.target.value)}
+                        ></textarea>
                     </div>
 
                     <div className="candidate-panel panel-block">
@@ -58,7 +87,7 @@ const Home = () => {
                             <span className="upload-icon" aria-hidden="true">↑</span>
                             <strong>Click to upload or drag &amp; drop</strong>
                             <small>PDF only (Max 5MB)</small>
-                            <input type="file" name="resume" id="resume" accept=".pdf,application/pdf" />
+                            <input ref={resumeInputRef} type="file" name="resume" id="resume" accept=".pdf,application/pdf" />
                         </label>
                         <div className="field-divider"></div>
                         <div className="section-heading self-heading">
@@ -68,10 +97,14 @@ const Home = () => {
                                 <p>Briefly describe your experience, key skills, and years of experience...</p>
                             </div>
                         </div>
-                        <textarea name="selfDescription" id="selfDescription" placeholder="e.g. I am a software engineer with 4 years of experience in building scalable web applications using React and Node.js..."></textarea>
+                        <textarea 
+                        onChange={(e) => setSelfDescription(e.target.value)}
+                        name="selfDescription" id="selfDescription" placeholder="e.g. I am a software engineer with 4 years of experience in building scalable web applications using React and Node.js..."></textarea>
                     </div>
 
-                    <button className="generate-button" type="button">
+                    <button 
+                        onclick={handleGenerateReport}
+                    className="generate-button" type="button" onClick={handleGenerateReport}>
                         <span aria-hidden="true">✦</span>
                         Generate My Interview Strategy
                         <span aria-hidden="true">→</span>

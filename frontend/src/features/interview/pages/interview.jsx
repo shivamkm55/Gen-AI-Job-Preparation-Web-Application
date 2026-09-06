@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import '../Style/interview.scss'
+import { useInterview } from '../hooks/useinterview.js'
 
 const demoReport = {
 	score: 88,
