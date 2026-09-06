@@ -9,3 +9,8 @@ html, body,#root{
   color: #1c2948;
   font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
 }
+
+#root {
+  max-width: none;
+  border: 0;
+}

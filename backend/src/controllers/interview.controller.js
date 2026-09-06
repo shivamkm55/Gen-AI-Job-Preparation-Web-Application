@@ -80,6 +80,11 @@ async function getAllInterviewReportsController(req, res) {
     .find({ user: req.user._id })
     .sort({ createdAt: -1 })
     .select("-resume -selfDescription -jobDescription -__v -technicalQuestions -behavioralQuestions -skillGaps -preparationPlan") // Exclude the resume, selfDescription, and jobDescription fields from the response
+
+    res.status(200).json({
+        message: "Interview reports retrieved successfully",
+        data: interviewReports
+    })
 }
 
 module.exports= {generateInterviewReportController, getInterviewReportByIdController, getAllInterviewReportsController}

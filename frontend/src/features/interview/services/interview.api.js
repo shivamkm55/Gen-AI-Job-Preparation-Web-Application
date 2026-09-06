@@ -14,9 +14,9 @@ export const generateInterviewReport = async ({jobDescription, selfDescription, 
   const formData = new FormData(); // if you want to send files, from the frontend to the backend, you need to use FormData
   formData.append('jobDescription', jobDescription);
   formData.append('selfDescription', selfDescription);
-  formData.append('resume', resumeFile); // Assuming resumeFile is a File object
+  formData.append('resume', resume);
 
-  const response = await api.post("/api/interview",formData, {
+  const response = await api.post("/",formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -27,13 +27,13 @@ export const generateInterviewReport = async ({jobDescription, selfDescription, 
  * @description service function to get interview report based on reportId
  */
 export const getInterviewReportID = async (reportId) => {
-  const response = await api.get(`/api/interview/report/${reportId}`)
+  const response = await api.get(`/${reportId}`)
   return response.data;
 }
 /**
   * @description service function to get all interview reports
  */
 export const getAllInterviewReports = async () => {
-  const response = await api.get(`/api/interview/`)
+  const response = await api.get(`/`)
   return response.data;
 } 

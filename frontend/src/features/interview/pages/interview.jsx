@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import '../Style/interview.scss'
 import { useInterview } from '../hooks/useinterview.js'
 
@@ -58,11 +58,24 @@ const sections = [
 ]
 
 const Interview = () => {
-	const location = useLocation()
 	const navigate = useNavigate()
-	const report = location.state?.report ?? demoReport
+	const { interviewId } = useParams()
+	const { report: contextReport, loading, getReportById } = useInterview()
+	const report = contextReport ?? demoReport
+	const requestedReportId = useRef(null)
 	const [activeSection, setActiveSection] = useState('technicalQuestions')
 	const [activeQuestion, setActiveQuestion] = useState(0)
+
+	useEffect(() => {
+		if (
+			interviewId &&
+			requestedReportId.current !== interviewId &&
+			(!contextReport || String(contextReport._id) !== interviewId)
+		) {
+			requestedReportId.current = interviewId
+			getReportById(interviewId)
+		}
+	}, [contextReport, getReportById, interviewId])
 
 	const questions = useMemo(() => report[activeSection] ?? [], [report, activeSection])
 	const currentQuestion = questions[activeQuestion]
@@ -70,6 +83,10 @@ const Interview = () => {
 	const selectSection = (section) => {
 		setActiveSection(section)
 		setActiveQuestion(0)
+	}
+
+	if (loading && !contextReport) {
+		return <main className="loading-screen"><h1>Loading Interview Report...</h1></main>
 	}
 
 	return (

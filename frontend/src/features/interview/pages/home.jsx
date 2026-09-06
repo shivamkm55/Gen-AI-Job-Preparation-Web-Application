@@ -1,18 +1,40 @@
 import '../Style/home.scss'
 import {useInterview} from '../hooks/useinterview.js'
-import React, { useState, useRef } from 'react';
-import {useNavigate} from 'react-router'
+import { useEffect, useState, useRef } from 'react';
+import {useNavigate} from 'react-router-dom'
 const Home = () => {
 
-    const {loading, generateReport} = useInterview();
+    const {loading, generateReport, reports, getAllReports} = useInterview();
+    const navigate = useNavigate();
     const [jobDescription, setJobDescription] = useState('');
     const [selfDescription, setSelfDescription] = useState('');
+    const [resumeFile, setResumeFile] = useState(null);
+    const [error, setError] = useState('');
+    const [historyError, setHistoryError] = useState('');
     const resumeInputRef = useRef(null);
 
+    useEffect(() => {
+        getAllReports().catch((requestError) => {
+            setHistoryError(requestError.message || 'Unable to load your report history.');
+        });
+    }, [getAllReports]);
+
     const handleGenerateReport = async () => {
-        const resumeFile = resumeInputRef.current.files[0];
-       const data= await generateReport({ jobDescription, selfDescription, resumeFile });
-       navigate(`/interview/${data._id}`);
+       setError('');
+
+       if (!jobDescription.trim() || !selfDescription.trim() || !resumeFile) {
+           setError('Please provide the job description, self description, and a PDF resume.');
+           return;
+       }
+
+       try {
+           const data = await generateReport({ jobDescription, selfDescription, resumeFile });
+           if (data?._id) {
+               navigate(`/interview/${data._id}`);
+           }
+       } catch (requestError) {
+           setError(requestError.message || 'Unable to generate your interview report.');
+       }
     };
 
     if (loading) {
@@ -63,7 +85,7 @@ const Home = () => {
                                 <label htmlFor="jobDescription">Job Description</label>
                                 <p>Paste the full job description here...</p>
                             </div>
-                            <span className="character-count">0 / 5000 characters</span>
+                            <span className="character-count">{jobDescription.length} / 5000 characters</span>
                         </div>
                         <textarea 
                             name="jobDescription" 
@@ -85,9 +107,33 @@ const Home = () => {
                         </div>
                         <label className="upload-zone" htmlFor="resume">
                             <span className="upload-icon" aria-hidden="true">↑</span>
-                            <strong>Click to upload or drag &amp; drop</strong>
-                            <small>PDF only (Max 5MB)</small>
-                            <input ref={resumeInputRef} type="file" name="resume" id="resume" accept=".pdf,application/pdf" />
+                            <strong>{resumeFile ? resumeFile.name : 'Click to upload or drag & drop'}</strong>
+                            <small>{resumeFile ? `${(resumeFile.size / (1024 * 1024)).toFixed(2)} MB selected` : 'PDF only (Max 3MB)'}</small>
+                            <input
+                                ref={resumeInputRef}
+                                type="file"
+                                name="resume"
+                                id="resume"
+                                accept=".pdf,application/pdf"
+                                onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (!file) return;
+                                    if (file.type !== 'application/pdf') {
+                                        setResumeFile(null);
+                                        setError('Please select a PDF file.');
+                                        event.target.value = '';
+                                        return;
+                                    }
+                                    if (file.size > 3 * 1024 * 1024) {
+                                        setResumeFile(null);
+                                        setError('The PDF must be smaller than 3 MB.');
+                                        event.target.value = '';
+                                        return;
+                                    }
+                                    setError('');
+                                    setResumeFile(file);
+                                }}
+                            />
                         </label>
                         <div className="field-divider"></div>
                         <div className="section-heading self-heading">
@@ -103,12 +149,12 @@ const Home = () => {
                     </div>
 
                     <button 
-                        onclick={handleGenerateReport}
                     className="generate-button" type="button" onClick={handleGenerateReport}>
                         <span aria-hidden="true">✦</span>
                         Generate My Interview Strategy
                         <span aria-hidden="true">→</span>
                     </button>
+                    {error && <p className="form-error" role="alert">{error}</p>}
                 </form>
 
                 <div className="benefits" aria-label="Interview plan benefits">
@@ -118,6 +164,44 @@ const Home = () => {
                     <i aria-hidden="true"></i>
                     <span><b aria-hidden="true">♕</b> Boost Your Confidence</span>
                 </div>
+
+                <section className="report-history" id="history" aria-labelledby="history-title">
+                    <div className="history-heading">
+                        <div>
+                            <span className="history-kicker">YOUR WORKSPACE</span>
+                            <h2 id="history-title">Previous interview reports</h2>
+                        </div>
+                        <span className="history-count">{reports.length} {reports.length === 1 ? 'report' : 'reports'}</span>
+                    </div>
+
+                    {historyError ? (
+                        <p className="history-message form-error-static" role="alert">{historyError}</p>
+                    ) : reports.length === 0 ? (
+                        <div className="history-empty">
+                            <span aria-hidden="true">◷</span>
+                            <p>Your generated reports will appear here.</p>
+                        </div>
+                    ) : (
+                        <div className="report-list">
+                            {reports.map((item) => (
+                                <button
+                                    className="report-item"
+                                    type="button"
+                                    key={item._id}
+                                    onClick={() => navigate(`/interview/${item._id}`)}
+                                >
+                                    <span className="report-icon" aria-hidden="true">✦</span>
+                                    <span className="report-details">
+                                        <strong>Interview preparation report</strong>
+                                        <small>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recently generated'}</small>
+                                    </span>
+                                    <span className="report-score"><b>{item.score ?? '--'}</b><small>/100</small></span>
+                                    <span className="report-arrow" aria-hidden="true">→</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </section>
             </main>
         </div>
     )

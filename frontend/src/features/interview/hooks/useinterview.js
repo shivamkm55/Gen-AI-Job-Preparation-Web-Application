@@ -1,5 +1,5 @@
 import { getAllInterviewReports, generateInterviewReport, getInterviewReportID} from "../services/interview.api"; 
-import { useState } from "react";
+import { useCallback, useContext } from "react";
 import { InterviewContext} from "../interview.context";
 
 
@@ -15,11 +15,12 @@ export const useInterview = () => {
     const generateReport = async ({jobDescription, selfDescription, resumeFile}) => {
         setLoading(true);
         try {
-            const data = await generateInterviewReport({jobDescription, selfDescription, resumeFile});
-            setReport(data.interviewReport);
-            return data;
+            const data = await generateInterviewReport({jobDescription, selfDescription, resume: resumeFile});
+            setReport(data.data);
+            return data.data;
         } catch (error) {
             console.error("Error generating interview report:", error);
+            throw new Error(error.response?.data?.message || "Unable to generate interview report", { cause: error });
         } finally {
             setLoading(false);
         }
@@ -29,7 +30,7 @@ export const useInterview = () => {
         setLoading(true);
         try {
             const data = await getInterviewReportID(reportId);
-            setReport(data);
+            setReport(data.data);
         } catch (error) {
             console.error("Error fetching interview report:", error);
         } finally {
@@ -37,17 +38,18 @@ export const useInterview = () => {
         }
     };
 
-    const getAllReports = async () => {
+    const getAllReports = useCallback(async () => {
         setLoading(true);   
         try{
             const response  = await getAllInterviewReports();
-            setReports(response.interviewReports);
+            setReports(response.data);
         } catch (error) {
             console.error("Error fetching all interview reports:", error);
+            throw new Error(error.response?.data?.message || "Unable to load interview reports", { cause: error });
         } finally {
             setLoading(false);
         }
-    };
+    }, [setLoading, setReports]);
 
     return { loading, setLoading, report, setReport, reports, setReports, generateReport, getReportById, getAllReports };
 };
